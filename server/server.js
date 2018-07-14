@@ -3,7 +3,7 @@ const http = require('http');
 const express = require('express');
 const socketIO = require('socket.io');
 
-var {generateMessage} = require('./utils/message');
+var {generateMessage,generateLocationMessage} = require('./utils/message');
 const publicPath = path.join(__dirname, '../public');
 const port = process.env.PORT || 3000;
 var app = express();
@@ -21,6 +21,10 @@ io.on('connection', (socket) => {
   socket.on('createMessage',function(message,callback) {
     console.log("newMessage",message);
     io.emit('newMessage',generateMessage(message.from , message.text));
+    callback();
+  })
+  socket.on('createUSerLocation',function(chord,callback) {
+    io.emit('newLocationMessage',generateLocationMessage("admin",chord.latitude,chord.longitude));
     callback();
   })
 

@@ -1,8 +1,8 @@
 var socket = io();
 
-function scrollToBottom () {
+function scrollToBottom() {
   // Selectors
-  var messages = jQuery('#messages');
+  var messages = $('#messages');
   var newMessage = messages.children('li:last-child')
   // Heights
   var clientHeight = messages.prop('clientHeight');
@@ -16,9 +16,11 @@ function scrollToBottom () {
   }
 }
 
+
 socket.on('connect', function () {
-  var params=jQuery.deparam(window.location.search);
-  socket.emit('join',params,function(err) {
+  var params = $.deparam(window.location.search);
+  console.log(params)
+  socket.emit('join', params, function (err) {
     if (err) {
       console.log(err);
       alert(err);
@@ -33,46 +35,57 @@ socket.on('connect', function () {
 socket.on('disconnect', function () {
   console.log('Disconnected from server');
 });
-socket.on('updateUserList',function(users) {
-  var i=0;
-  var ol= jQuery('<ol></ol>');
-  users.forEach(function() {
-    ol.append(jQuery('<li></li>').text(users[i]))
+socket.on('updateUserList', function (users) {
+  var i = 0;
+  var ol = $('<ol></ol>');
+  users.forEach(function () {
+    ol.append($('<li></li>').text(users[i]))
     i++;
   })
-  jQuery('#users').html(ol);
+  $('#users').html(ol);
 })
-
+socket.on('user image', function (message) {
+  if (message) {
+    var formattedTime = moment(message.createdAt).format('h:mm a');
+    var template = $('#image-template').html();
+    var html = Mustache.render(template, {
+      image: message.image,
+      from: message.from,
+      createdAt: formattedTime
+    });
+    $('#messages').append(html);
+  }
+});
 socket.on('newMessage', function (message) {
   var formattedTime = moment(message.createdAt).format('h:mm a');
-  var template = jQuery('#message-template').html();
+  var template = $('#message-template').html();
   var html = Mustache.render(template, {
     text: message.text,
     from: message.from,
     createdAt: formattedTime
   });
 
-  jQuery('#messages').append(html);
+  $('#messages').append(html);
   scrollToBottom();
 });
 
 socket.on('newLocationMessage', function (message) {
   var formattedTime = moment(message.createdAt).format('h:mm a');
-  var template = jQuery('#location-message-template').html();
+  var template = $('#location-message-template').html();
   var html = Mustache.render(template, {
     from: message.from,
     url: message.url,
     createdAt: formattedTime
   });
 
-  jQuery('#messages').append(html);
+  $('#messages').append(html);
   scrollToBottom();
 });
 
-jQuery('#message-form').on('submit', function (e) {
+$('#message-form').on('submit', function (e) {
   e.preventDefault();
 
-  var messageTextbox = jQuery('[name=message]');
+  var messageTextbox = $('[name=message]');
 
   socket.emit('createMessage', {
     text: messageTextbox.val()
@@ -80,8 +93,33 @@ jQuery('#message-form').on('submit', function (e) {
     messageTextbox.val('')
   });
 });
+$('[name=image]').on('change', function (e) {
+  var file = e.originalEvent.target.files[0]
+  reader = new FileReader();
+  //When the file has been read...
+  reader.onload = function (evt) {
+    $('#blah')
+      .removeAttr('style')
+      .attr('src', evt.target.result)
+      .width(50)
+      .height(60);
+    $('[name=image]').attr("value", evt.target.result);
+  };
+  //And now, read the image and base64
+  file = reader.readAsDataURL(file);
+})
+$('#image-form').on('submit', function (e) {
+  e.preventDefault();
+  var imageTextbox = $('[name=image]');
+  var image = imageTextbox.attr("value");
+  socket.emit('user image', image);
+  imageTextbox.val('')
+  $('#blah')
+    .css("visibility", "hidden")
 
-var locationButton = jQuery('#send-location');
+})
+
+var locationButton = $('#send-location');
 locationButton.on('click', function () {
   if (!navigator.geolocation) {
     return alert('Geolocation not supported by your browser.');

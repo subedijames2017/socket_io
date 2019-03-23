@@ -15,5 +15,12 @@ var generateLocationMessage = (from, latitude, longitude) => {
     createdAt: moment().valueOf()
   };
 };
+var generateImageMessage = (from, image, longitude) => {
+  return {
+    from,
+    image: image,
+    createdAt: moment().valueOf()
+  };
+};
 
-module.exports = {generateMessage, generateLocationMessage};
+module.exports = { generateMessage, generateLocationMessage, generateImageMessage };
